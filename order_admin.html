@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order & Booking Management - Mijies Cafe</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f6f9; }
+        .sidebar-brand { padding: 15px 25px; font-size: 24px; font-weight: 700; color: #FEA116; text-align: center; border-bottom: 1px solid #222; }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #0F172B; padding-top: 20px; z-index: 999; }
+        .sidebar-menu { padding: 0; list-style: none; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 15px 25px; color: white; text-decoration: none; transition: .3s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: #FEA116; color: black; }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .card-box { background: white; padding: 25px; border-radius: 18px; box-shadow: 0 0 15px rgba(0,0,0,.08); }
+        
+        /* Status Badges */
+        .badge-booking { background: #6f42c1; color: white; font-size: 0.7rem; }
+        .badge-walkin { background: #17a2b8; color: white; font-size: 0.7rem; }
+        
+        .status-select { font-size: 0.85rem; padding: 5px; border-radius: 5px; border: 1px solid #ddd; width: 100%; }
+        .badge-pending { background: #ffc107; color: #000; }
+        .badge-preparing { background: #fd7e14; color: #fff; }
+        .badge-ready { background: #007bff; color: #fff; }
+        .badge-completed { background: #28a745; color: #fff; }
+        
+        .booking-info { font-size: 0.8rem; color: #666; display: block; margin-top: 5px; }
+        .blink { animation: blinker 1.5s linear infinite; color: red; }
+        @keyframes blinker { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-utensils"></i> Mijies Cafe</div>
+    <ul class="sidebar-menu">
+        <li><a href="admin.html"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li><a href="customer_admin.html"><i class="fas fa-users"></i> Customer</a></li>
+        <li><a href="staff_admin.html"><i class="fas fa-user-tie"></i> Staff</a></li>
+        <li><a href="menu_admin.html"><i class="fas fa-hamburger"></i> Menu</a></li>
+        <li><a href="package_admin.html"><i class="fas fa-box"></i> Package</a></li>
+        <li><a href="order_admin.html" class="active"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+        <li><a href="payment_admin.html"><i class="fas fa-credit-card"></i> Payment</a></li>
+        <li><a href="login.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Order List</h3>
+            <p class="text-muted">Manage food orders</p>
+        </div>
+        <span class="badge bg-white text-dark border p-2"><i class="fas fa-circle blink"></i> Live Updates</span>
+    </div>
+
+    <div class="card-box">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 150px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="orderTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center">Loading order records...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="receiptModalLabel"><i class="fas fa-receipt text-warning me-2"></i> Proof of QR</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img id="modalReceiptImg" src="" alt="Resit Pembayaran" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: contain;">
+                <div id="modalReceiptText" class="mt-2 text-muted small"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadOrders();
+    });
+
+	function loadOrders() {
+		fetch('get_orders.php')
+			.then(response => response.json())
+			.then(data => {
+				const tableBody = document.getElementById('orderTableBody');
+				tableBody.innerHTML = ''; 
+
+				if (data.length === 0) {
+					tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No order records found at this moment.</td></tr>`;
+					return;
+				}
+
+				data.forEach(order => {
+
+    let rawDetails = order.orderDetail || "";
+
+    let name = "Unknown";
+    let phone = "-";
+    let items = "No items ordered";
+    let diningType = "Dine-In"; 
+
+    if (rawDetails) {
+   
+        if (rawDetails.includes("Customer:")) {
+            
+            let customerLine = rawDetails.split('\n').find(line => line.includes("Customer:"));
+            if (customerLine) {
+                let cleanInfo = customerLine.replace("Customer:", "").trim();
+                if (cleanInfo.includes("(") && cleanInfo.includes(")")) {
+                    name = cleanInfo.substring(0, cleanInfo.indexOf('(')).trim();
+                    phone = cleanInfo.substring(cleanInfo.indexOf('(') + 1, cleanInfo.indexOf(')')).trim();
+                } else {
+                    name = cleanInfo;
+                }
+            }
+        }
+
+        //Extract Items Purchased
+        if (rawDetails.includes("Items:")) {
+            let itemsLine = rawDetails.split('\n').find(line => line.includes("Items:"));
+            if (itemsLine) {
+                items = itemsLine.replace("Items:", "").trim();
+            }
+        }
+
+        // Extract Dining Type Choice (Passed over from checkout/payment choices)
+        if (rawDetails.toLowerCase().includes("take away")) {
+            diningType = "Take Away";
+        } else if (rawDetails.toLowerCase().includes("dine-in")) {
+            diningType = "Dine-In";
+        }
+    }
+
+
+    let typeBadgeHTML = "";
+    if (diningType === "Take Away") {
+        typeBadgeHTML = `<span class="badge bg-warning text-dark"><i class="fas fa-shopping-bag"></i> Take Away</span>`;
+    } else {
+        typeBadgeHTML = `<span class="badge bg-info text-white"><i class="fas fa-utensils"></i> Dine-In</span>`;
+    }
+
+	let currentStatus = order.orderStatus ? order.orderStatus.trim() : "Preparing";
+
+	if (currentStatus === "" || currentStatus === "Pending") {
+		currentStatus = "Preparing";
+	}
+
+	let badgeClass = "badge-preparing"; // Default Oren
+	if (currentStatus === "Ready") badgeClass = "badge-ready"; // Biru
+	if (currentStatus === "Completed") badgeClass = "badge-completed"; // Hijau
+    let row = `
+        <tr>
+            <td>#ORD-${order.orderID}</td>
+            
+            <td>
+                ${typeBadgeHTML}
+            </td>
+            
+            <td>
+                <div><strong>Customer Record</strong></div>
+                <small class="text-muted"><i class="far fa-clock"></i> ${order.orderDate}</small>
+            </td>
+            
+            <td>
+                <div><strong>Name:</strong> ${name}</div>
+                <div><strong>Phone No:</strong> ${phone}</div>
+                <div><strong>Items:</strong> ${items}</div>
+            </td>
+            
+            <td>
+                <span id="status-${order.orderID}" class="badge ${badgeClass}">${currentStatus}</span>
+            </td>
+            
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <select class="form-select form-select-sm" style="width: 130px;" onchange="updateOrderStatus('${order.orderID}', this.value)">
+                        <option value="Preparing" ${currentStatus === 'Preparing' ? 'selected' : ''}>Preparing</option>
+                        <option value="Ready" ${currentStatus === 'Ready' ? 'selected' : ''}>Ready</option>
+                        <option value="Completed" ${currentStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </div>
+            </td>
+        </tr>
+    `;
+    tableBody.innerHTML += row;
+});
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				document.getElementById('orderTableBody').innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to fetch order data.</td></tr>`;
+			});
+	}
+
+
+	function updateOrderStatus(id, selectedStatus) {
+    const statusSpan = document.getElementById('status-' + id);
+
+    if (statusSpan) {
+        statusSpan.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+    }
+
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('status', selectedStatus);
+
+    fetch('update_order_status.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(text => {
+        console.log("PHP response:", text);
+
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch (e) {
+            alert("PHP not JSON. Check Console error.");
+            console.log(text);
+            loadOrders();
+            return;
+        }
+
+        if (result.success) {
+            let badgeClass = "badge-preparing";
+            if (selectedStatus === "Ready") badgeClass = "badge-ready";
+            if (selectedStatus === "Completed") badgeClass = "badge-completed";
+
+            if (statusSpan) {
+                statusSpan.className = `badge ${badgeClass}`;
+                statusSpan.innerText = selectedStatus;
+            }
+        } else {
+            alert("Database Error: " + result.message);
+            loadOrders();
+        }
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error);
+        alert("Fetch Error. File update_order_status.php not found.");
+        loadOrders();
+    });
+}
+
+function viewReceiptImage(fileName) {
+    if (!fileName || fileName.trim() === "" || fileName.toLowerCase().includes('cash')) {
+        alert("Dont have file receipt.");
+        return;
+    }
+    
+    const folderPath = 'uploads/'; 
+    const fullImagePath = folderPath + fileName;
+
+    const modalImg = document.getElementById('modalReceiptImg');
+    modalImg.src = fullImagePath;
+    
+    document.getElementById('modalReceiptText').innerText = "File Name: " + fileName;
+
+    modalImg.onerror = function() {
+        this.src = 'https://placehold.co/400x500?text=Fail+Imej+Tidak+Dijumpai';
+        document.getElementById('modalReceiptText').innerHTML = `<span class="text-danger fw-bold"><i class="fas fa-exclamation-triangle"></i> Fail '${fileName}' not in folder '${folderPath}'</span>`;
+    };
+
+    const myModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+    myModal.show();
+}
+</script>
+
+</body>
+</html>

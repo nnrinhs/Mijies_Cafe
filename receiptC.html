@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Receipt - Mijies Cafe</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background: #f4f4f4; padding: 20px; }
+        .receipt-box { 
+            max-width: 400px; 
+            margin: auto; 
+            background: white; 
+            padding: 20px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-top: 8px solid #FEA116;
+        }
+        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+        .info { font-size: 14px; margin: 15px 0; }
+        .item-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .item-table th { text-align: left; border-bottom: 1px solid #000; }
+        .item-table td { padding: 5px 0; font-size: 14px; }
+        .total-section { border-top: 1px dashed #000; padding-top: 10px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+        .no-print { margin-top: 20px; text-align: center; }
+        .btn-print { background: #FEA116; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="receipt-box" id="receipt">
+    <div class="header">
+        <h2 style="margin:0;">MIJIES CAFE</h2>
+        <p style="margin:5px 0;">UiTM<br>Kedah</p>
+        <p>Tel: 012-3456789</p>
+    </div>
+
+    <div class="info">
+        <p><strong>Date:</strong> <span id="date"></span></p>
+        <p><strong>Name:</strong> <span id="res-name"></span></p>
+        <p><strong>No. Tel:</strong> <span id="res-phone"></span></p>
+        <p><strong>Status:</strong> <span id="res-method"></span></p>
+    </div>
+
+    <table class="item-table">
+        <thead>
+            <tr>
+                <th>Menu Item</th>
+                <th style="text-align:right;">Price</th>
+            </tr>
+        </thead>
+        <tbody id="item-list">
+            </tbody>
+    </table>
+
+    <div class="total-section">
+        <div style="display:flex; justify-content:space-between;">
+            <span>TOTAL:</span>
+            <span>RM <span id="res-total">0.00</span></span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>*** THANK YOU! ***</p>
+        <p>Please show your receipt at counter.</p>
+    </div>
+</div>
+
+<div class="no-print">
+    <button class="btn-print" onclick="window.print()">Print/Save PDF</button><br><br>
+    <a href="menuC.html" style="color: #666; text-decoration: none; font-size: 14px;">Back to menu.</a>
+</div>
+
+<script>
+    window.onload = function() {
+        const cart = JSON.parse(sessionStorage.getItem('fullCart'));
+        const total = sessionStorage.getItem('grandTotal');
+        const name = sessionStorage.getItem('custName');
+        const phone = sessionStorage.getItem('custPhone');
+        const method = sessionStorage.getItem('payMethod');
+
+        if (!cart) {
+            window.location.href = "menuC.html";
+            return;
+        }
+
+        // Set maklumat pelanggan
+        document.getElementById('res-name').innerText = name;
+        document.getElementById('res-phone').innerText = phone;
+        document.getElementById('res-total').innerText = total;
+        document.getElementById('res-method').innerText = (method === 'qr' ? 'PAID (ONLINE)' : 'UNPAID (CASH)');
+        document.getElementById('date').innerText = new Date().toLocaleString();
+
+        // Masukkan senarai makanan
+        const listBody = document.getElementById('item-list');
+        cart.forEach(item => {
+            const row = `<tr>
+                <td>${item.name}</td>
+                <td style="text-align:right;">RM ${item.price.toFixed(2)}</td>
+            </tr>`;
+            listBody.innerHTML += row;
+        });
+    };
+</script>
+
+</body>
+</html>

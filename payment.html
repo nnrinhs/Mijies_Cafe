@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijies Cafe - Payment</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #FEA116; --dark: #0F172B; --light: #F1F8FF; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); padding: 20px; }
+        .payment-container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; }
+        .order-info { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid var(--primary); }
+        
+        /* Style untuk Input Maklumat */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark); }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        
+        .method-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .method-btn { flex: 1; padding: 15px; border: 2px solid #ccc; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .method-btn.active { border-color: var(--primary); background: #fff8ee; color: var(--primary); }
+        
+        /* Style Tambahan untuk Dining Option Toggle Selection */
+        .dining-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .dining-btn { flex: 1; padding: 12px; border: 2px solid #ccc; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .dining-btn.active { border-color: #28a745; background: #f4fdf6; color: #28a745; }
+
+        .qr-section { display: none; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .qr-img { width: 200px; height: 200px; margin: 10px auto; background: #eee; display: flex; align-items: center; justify-content: center; }
+        .qr-img img { width: 100%; height: 100%; object-fit: contain; }
+        .btn-confirm { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-confirm:hover { background: #e08e12; }
+    </style>
+</head>
+<body>
+
+<div class="payment-container">
+    <h2 style="color: var(--dark); margin-bottom: 20px;"><i class="fas fa-credit-card text-warning"></i> Checkout Payment</h2>
+    
+    <div class="order-info">
+        <h5>Order Summary</h5>
+        <div id="order-summary-items" style="margin-bottom: 12px; font-size: 14px; color: #555;"></div>
+        <hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">
+        <p style="margin: 5px 0; font-weight: bold;">Total Amount: <span style="float: right; color: var(--primary);">RM <span id="summary-total">0.00</span></span></p>
+    </div>
+
+    <div class="input-group">
+        <label for="cust-name">Name</label>
+        <input type="text" id="cust-name" placeholder="Enter your name">
+    </div>
+    <div class="input-group">
+        <label for="cust-phone">Phone Number</label>
+        <input type="text" id="cust-phone" placeholder="Enter your phone number">
+    </div>
+
+    <h5 style="text-align: left; margin-bottom: 10px; color: var(--dark);"><i class="fas fa-utensils text-success"></i> Dining Option</h5>
+    <div class="dining-container">
+        <button class="dining-btn active" id="dinein-btn" onclick="selectDining('Dine-In')">
+            <i class="fas fa-chair"></i> Dine-In
+        </button>
+        <button class="dining-btn" id="takeaway-btn" onclick="selectDining('Take Away')">
+            <i class="fas fa-shopping-bag"></i> Take Away
+        </button>
+    </div>
+
+    <h5 style="text-align: left; margin-bottom: 10px; color: var(--dark);"><i class="fas fa-wallet text-warning"></i> Payment Method</h5>
+    <div class="method-container">
+        <button class="method-btn active" id="cash-btn" onclick="selectMethod('cash')">
+            <i class="fas fa-money-bill-wave fa-2x d-block mb-2"></i> Cash at Counter
+        </button>
+        <button class="method-btn" id="qr-btn" onclick="selectMethod('qr')">
+            <i class="fas fa-qrcode fa-2x d-block mb-2"></i> DuitNow QR
+        </button>
+    </div>
+
+    <div class="qr-section" id="qr-section">
+        <p style="font-weight: bold; margin-bottom: 5px;">Scan & Pay via DuitNow QR</p>
+        <div class="qr-img">
+            <img src="img/qr.jpeg" alt="DuitNow QR Code">
+        </div>
+        <div class="input-group">
+            <label for="receipt-file">Upload your online transaction receipt</label>
+            <input type="file" id="receipt-file" accept="image/*">
+        </div>
+    </div>
+
+    <button class="btn-confirm" onclick="confirmOrder()">Confirm Order</button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script>
+    let currentMethod = 'cash';
+    let currentDining = 'Dine-In';
+
+    function selectDining(option) {
+        currentDining = option;
+        document.getElementById('dinein-btn').classList.toggle('active', option === 'Dine-In');
+        document.getElementById('takeaway-btn').classList.toggle('active', option === 'Take Away');
+    }
+
+    function selectMethod(method) {
+        currentMethod = method;
+        document.getElementById('cash-btn').classList.toggle('active', method === 'cash');
+        document.getElementById('qr-btn').classList.toggle('active', method === 'qr');
+        document.getElementById('qr-section').style.display = (method === 'qr' ? 'block' : 'none');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        fetch('get_user_session.php')
+        .then(response => response.json())
+        .then(userData => {
+            if (userData.logged_in) {
+                document.getElementById('cust-name').value = userData.custName;
+                document.getElementById('cust-phone').value = userData.custPhoneNo;
+
+                document.getElementById('cust-name').readOnly = true;
+                document.getElementById('cust-phone').readOnly = true;
+            } //else {
+
+               // alert("Please log in first!");
+               // window.location.href = "login.html";
+            //}
+        })
+        .catch(err => console.error("Error fetching customer session data:", err));
+
+        const total = sessionStorage.getItem('grandTotal') || "0.00";
+        document.getElementById('summary-total').innerText = total;
+
+        const storedCart = sessionStorage.getItem('fullCart');
+        const itemsContainer = document.getElementById('order-summary-items');
+
+        if (storedCart && itemsContainer) {
+            try {
+                const cartArray = JSON.parse(storedCart);
+                if(cartArray.length > 0) {
+                    let htmlList = "";
+                    cartArray.forEach(item => {
+                        let subtotal = item.price * item.quantity;
+                        htmlList += `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span>${item.name} <b class="text-danger">x${item.quantity}</b></span>
+                                <span class="text-secondary">RM ${subtotal.toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    itemsContainer.innerHTML = htmlList;
+                } else {
+                    itemsContainer.innerHTML = "<div>No items selected.</div>";
+                }
+            } catch(e) {
+                console.error("Error reading cart data:", e);
+                itemsContainer.innerHTML = "<div>Error displaying order list.</div>";
+            }
+        }
+    });
+	
+    // DATABASE
+    function confirmOrder() {
+        const name = document.getElementById('cust-name').value.trim();
+        const phone = document.getElementById('cust-phone').value.trim();
+
+        if (!name || !phone) {
+            alert("Please enter your name and phone number!.");
+            return;
+        }
+
+        const storedCart = sessionStorage.getItem('fullCart');
+        const grandTotal = sessionStorage.getItem('grandTotal') || "0.00";
+        
+        let itemsArray = [];
+        if (storedCart) {
+            try { itemsArray = JSON.parse(storedCart); } catch(e) { console.error(e); }
+        }
+
+        if (itemsArray.length === 0) {
+            alert("Empty!.");
+            window.location.href = "menu.html";
+            return;
+        }
+
+        const orderDetailText = itemsArray
+            .map(item => `${item.name} x${item.quantity}`)
+            .join(", ");
+
+        const orderDetailFinal = "Customer: " + name + " (" + phone + ")\nItems: " + orderDetailText + "\nType: " + currentDining;
+
+
+        const formData = new FormData();
+        formData.append('custName', name);
+        formData.append('custPhone', phone);
+        formData.append('orderDetail', orderDetailFinal);
+        formData.append('grandTotal', grandTotal);
+        formData.append('paymentMethod', currentMethod); 
+
+        if (currentMethod === 'qr') {
+            const fileInput = document.getElementById('receipt-file');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please upload your receipt.");
+                return;
+            }
+
+            formData.append('receiptFile', fileInput.files[0]);
+        }
+        // -------------------------------------------------------------
+
+        const orderBtn = document.querySelector(".btn-confirm");
+        if(orderBtn) {
+            orderBtn.disabled = true;
+            orderBtn.innerText = "Processing...";
+        }
+
+        fetch('submit_order.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(`Thank you ${name}! Your order (#ORD-${result.orderID}) has successful.`);
+                
+                sessionStorage.setItem('custName', name);
+                sessionStorage.setItem('custPhone', phone);
+                sessionStorage.setItem('payMethod', currentMethod);
+                sessionStorage.setItem('diningOption', currentDining);
+
+                window.location.href = "receipt.html"; 
+            } else {
+                alert("Database error: " + result.message);
+                if(orderBtn) { orderBtn.disabled = false; orderBtn.innerText = "Confirm Order"; }
+            }
+        })
+        .catch(error => {
+            console.error('Fetch Error:', error);
+            alert("Error to connect. Make sure XAMPP Apache/MySQL active.");
+            if(orderBtn) { orderBtn.disabled = false; orderBtn.innerText = "Confirm Order"; }
+        });
+    }
+</script>
+</body>
+</html>

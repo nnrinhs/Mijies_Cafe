@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Management - Mijies Cafe</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f6f9; }
+        .sidebar-brand { padding: 15px 25px; font-size: 24px; font-weight: 700; color: #FEA116; text-align: center; border-bottom: 1px solid #222; }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #0F172B; padding-top: 20px; z-index: 999; }
+        .sidebar-menu { padding: 0; list-style: none; }
+        .sidebar-menu li a { display: flex; align-items: center; gap: 15px; padding: 15px 25px; color: white; text-decoration: none; transition: .3s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: #FEA116; color: black; }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .card-box { background: white; padding: 25px; border-radius: 18px; box-shadow: 0 0 15px rgba(0,0,0,.08); }
+        .btn-update { background: #FEA116; color: black; font-weight: 600; border: none; }
+        .btn-update:hover { background: #e08b10; color: black; }
+        .table thead { background: #0F172B; color: white; }
+        
+        .badge-breakfast { background: #0F172B; color: white; }
+        .badge-lunch { background: #6c5ce7; color: white; }
+        .badge-drink { background: #fd7e14; color: white; } 
+        .badge-default { background: #6c757d; color: white; }
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-utensils"></i> Mijies Cafe</div>
+    <ul class="sidebar-menu">
+        <li><a href="admin.html"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li><a href="customer_admin.html"><i class="fas fa-users"></i> Customer</a></li>
+        <li><a href="staff_admin.html"><i class="fas fa-user-tie"></i> Staff</a></li>
+        <li><a href="menu_admin.html" class="active"><i class="fas fa-hamburger"></i> Menu</a></li>
+        <li><a href="package_admin.html"><i class="fas fa-box"></i> Package</a></li>
+        <li><a href="order_admin.html"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+        <li><a href="payment_admin.html"><i class="fas fa-credit-card"></i> Payment</a></li>
+        <li><a href="login.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; margin-top: 5px;">
+        <h2 style="font-weight: 700; color: #0F172B; margin: 0;">Menu Management</h2>
+        
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addMenuModal" style="background-color: #FEA116; color: white; border: none; font-weight: 700; padding: 10px 20px; border-radius: 6px;">
+            <i class="fas fa-plus"></i> Add New Menu
+        </button>
+    </div>
+
+    <div class="card-box">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Menu ID</th> 
+                        <th>Menu Name</th>
+                        <th>Details</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="menuTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center">Loading registered cafe menu database...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editMenuModal" tabindex="-1" aria-labelledby="editMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #0F172B; color: white;">
+                <h5 class="modal-title fw-bold" id="editMenuModalLabel"><i class="fas fa-edit text-warning"></i> Edit Menu Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editMenuForm" onsubmit="submitEditMenu(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="editMenuID" name="menuID">
+                    
+                    <div class="mb-3">
+                        <label for="editMenuName" class="form-label fw-bold">Menu Name</label>
+                        <input type="text" class="form-control" id="editMenuName" name="menuName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editMenuCategory" class="form-label fw-bold">Category</label>
+                        <select class="form-select" id="editMenuCategory" name="menuDetails" required>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Lovely Drink">Drink</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editMenuPrice" class="form-label fw-bold">Price (RM)</label>
+                        <input type="number" step="0.01" class="form-control" id="editMenuPrice" name="menuPrice" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editMenuStatus" class="form-label fw-bold">Status</label>
+                        <select class="form-select" id="editMenuStatus" name="menuStatus" required>
+                            <option value="Available">Available</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-update">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addMenuModal" tabindex="-1" aria-labelledby="addMenuModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #0F172B; color: white;">
+                <h5 class="modal-title fw-bold" id="addMenuModalLabel">Add New Menu Item</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addMenuForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Menu Name</label>
+                        <input type="text" class="form-control" name="menuName" required placeholder="Contoh: Nasi Goreng Kampung">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Price (RM)</label>
+                        <input type="number" step="0.01" class="form-control" name="menuPrice" required placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category (Details)</label>
+                        <select class="form-select" name="menuDetails" required>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Drink">Drink</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status</label>
+                        <select class="form-select" name="menuStatus" required>
+                            <option value="Available">Available</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Menu Image</label>
+                        <input type="file" class="form-control" name="menuImage" accept="image/*" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-bold" style="background-color: #FEA116; color: white; border: none;">Save Menu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+	
+<script>
+    let globalMenuData = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadMenu();
+        
+        // PENTING: Menambah Logik AJAX untuk Hantar Borang Add Menu ke PHP
+        document.getElementById('addMenuForm').addEventListener('submit', function(e) { 
+            e.preventDefault(); 
+
+            const formData = new FormData(this);
+
+            fetch('add_menu.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json()) 
+            .then(data => { 
+                if (data.success) { 
+                    alert("Done!"); 
+                    const addModalElement = document.getElementById('addMenuModal');
+                    const addModalInstance = bootstrap.Modal.getInstance(addModalElement);
+                    addModalInstance.hide();
+                    document.getElementById('addMenuForm').reset();
+                    loadMenu(); 
+                } else { 
+                    alert("Failed: " + data.message); 
+                } 
+            }) 
+            .catch(error => { 
+                console.error("Error:", error); 
+                alert("Error."); 
+            }); 
+        });
+    });
+
+    function loadMenu() {
+        fetch('get_menu.php')
+            .then(response => response.json())
+            .then(data => {
+                globalMenuData = data; 
+                const tableBody = document.getElementById('menuTableBody');
+                tableBody.innerHTML = ''; 
+
+                if (data.length === 0 || data.error) {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No menu entries found.</td></tr>`;
+                    return;
+                }
+
+                data.forEach(item => {
+                    let detailText = item.menuDetails ? item.menuDetails.trim() : 'N/A';
+                    let catLower = detailText.toLowerCase();
+                    let catBadgeClass = 'badge-default';
+                    
+                    if (catLower.includes('breakfast')) {
+                        catBadgeClass = 'badge-breakfast';
+                    } else if (catLower.includes('lunch')) {
+                        catBadgeClass = 'badge-lunch';
+                    } else if (catLower.includes('drink')) {
+                        catBadgeClass = 'badge-drink';
+                    }
+
+                    let statusClass = item.menuStatus === 'Available' ? 'text-success fw-bold' : 'text-danger fw-bold';
+                    let formattedID = `#MNU-${String(item.menuID).padStart(3, '0')}`;
+
+                    let row = `
+                        <tr>
+                            <td><b>${formattedID}</b></td>
+                            <td>${item.menuName}</td>
+                            <td><span class="badge ${catBadgeClass} px-3 py-2">${detailText}</span></td>
+                            <td>RM ${parseFloat(item.menuPrice).toFixed(2)}</td>
+                            <td><span class="${statusClass}">${item.menuStatus}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning me-1" onclick="openEditModal(${item.menuID})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching menu data:', error);
+                document.getElementById('menuTableBody').innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to load menu database.</td></tr>`;
+            });
+    }
+
+    function openEditModal(menuID) {
+        const menuSelected = globalMenuData.find(item => item.menuID == menuID);
+        
+        if (menuSelected) {
+            document.getElementById('editMenuID').value = menuSelected.menuID;
+            document.getElementById('editMenuName').value = menuSelected.menuName;
+            document.getElementById('editMenuCategory').value = menuSelected.menuDetails;
+            document.getElementById('editMenuPrice').value = menuSelected.menuPrice;
+            document.getElementById('editMenuStatus').value = menuSelected.menuStatus;
+            
+            var editModal = new bootstrap.Modal(document.getElementById('editMenuModal'));
+            editModal.show();
+        }
+    }
+
+    function submitEditMenu(event) {
+        event.preventDefault();
+        
+        const formElement = document.getElementById('editMenuForm');
+        const formData = new FormData(formElement);
+
+        fetch('update_menu.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(result.message);
+                const modalElement = document.getElementById('editMenuModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                modalInstance.hide();
+                loadMenu();
+            } else {
+                alert("Error: " + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating menu:', error);
+            alert("An error occurred while updating the menu selection.");
+        });
+    }
+</script>
+</body>
+</html>

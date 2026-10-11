@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mijies Cafe</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Poppins', sans-serif; background:#f4f6f9; }
+        .sidebar { position:fixed; top:0; left:0; width:260px; height:100vh; background:#0F172B; padding-top:20px; z-index:999; }
+        .sidebar-brand { padding: 15px 25px; font-size: 24px; font-weight: 700; color: #FEA116; text-align: center; border-bottom: 1px solid #222; }
+        .sidebar-menu { padding:0; list-style:none; }
+        .sidebar-menu li a { display:flex; align-items:center; gap:15px; padding:15px 25px; color:white; text-decoration:none; transition:.3s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background:#FEA116; color:black; }
+        .main-content { margin-left:260px; padding:30px; }
+        .topbar { background:white; padding:20px 30px; border-radius:15px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 0 15px rgba(0,0,0,.08); margin-bottom:30px; }
+        
+        .dashboard-cards { width: 100%; }
+        .card-box { background:white; padding:25px; border-radius:18px; box-shadow:0 0 15px rgba(0,0,0,.08); transition:.3s; border: none; height: 100%; }
+        .card-box:hover { transform:translateY(-5px); }
+
+        .card-divider { border: 0; border-top: 1px solid #eef0f3; margin: 12px 0; }
+        .card-details { display: flex; flex-direction: column; gap: 8px; }
+        .detail-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #6c757d; }
+        .detail-item strong { color: #212529; font-weight: 600; }
+        
+        .pkg-list-container, .menu-oos-container { display: flex; flex-direction: column; margin-top: 10px; }
+        .pkg-row, .menu-oos-row { padding: 8px 5px; border-bottom: 1px solid #eef0f3; }
+        .pkg-row:last-child, .menu-oos-row:last-child { border-bottom: none; }
+        .pkg-name-orange { color: #FEA116 !important; font-weight: 700; font-size: 14px; }
+        .menu-name-red { color: #dc3545 !important; font-weight: 700; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-brand"><i class="fas fa-utensils"></i> Mijies Cafe</div>
+    <ul class="sidebar-menu">
+        <li><a href="admin.html" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li><a href="customer_admin.html"><i class="fas fa-users"></i> Customer</a></li>
+        <li><a href="staff_admin.html"><i class="fas fa-user-tie"></i> Staff</a></li>
+        <li><a href="menu_admin.html"><i class="fas fa-hamburger"></i> Menu</a></li>
+        <li><a href="package_admin.html"><i class="fas fa-box"></i> Package</a></li>
+        <li><a href="order_admin.html"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+        <li><a href="payment_admin.html"><i class="fas fa-credit-card"></i> Payment</a></li>
+        <li><a href="login.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <div class="topbar">
+        <h3>Dashboard</h3>
+        <h5>Welcome Staff 👋</h5>
+    </div>
+    
+    <div class="dashboard-cards">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card-box p-4 text-start rounded-3">
+                    <i class="fas fa-users fa-2x text-warning mb-2"></i>
+                    <h2 class="fw-bold mb-0" id="count-customers">...</h2>
+                    <span class="text-muted small">Total Customers</span>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card-box p-4 text-start rounded-3">
+                    <i class="fas fa-utensils fa-2x text-warning mb-2"></i>
+                    <h2 class="fw-bold mb-0" id="count-menus">...</h2>
+                    <span class="text-muted small">Total Menu</span>
+                    
+                    <hr class="card-divider">
+                    <div class="card-details">
+                        <div class="detail-item">
+                            <span>🍳 Breakfast</span>
+                            <strong id="count-breakfast">0</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>🍔 Lunch</span>
+                            <strong id="count-lunch">0</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>🍹 Drinks</span>
+                            <strong id="count-drinks">0</strong>
+                        </div>
+                    </div>
+
+                    <hr class="card-divider">
+                    <div class="text-danger small fw-bold mb-1"><i class="fas fa-exclamation-circle"></i> OUT OF STOCK MENU:</div>
+                    <div class="menu-oos-container" id="menu-oos-list">
+                        <div class="text-muted small">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card-box p-4 text-start rounded-3">
+                    <i class="fas fa-box fa-2x text-warning mb-2"></i>
+                    <h2 class="fw-bold mb-0" id="count-packages">...</h2>
+                    <span class="text-muted small">Total Packages</span>
+
+                    <hr class="card-divider">
+                    <div class="pkg-list-container" id="packages-list">
+                        <div class="text-muted small p-1">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card-box p-4 text-start rounded-3">
+                    <i class="fas fa-shopping-bag fa-2x text-warning mb-2"></i>
+                    <h2 class="fw-bold mb-0" id="count-orders">...</h2>
+                    <span class="text-muted small">Total Orders</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    fetch('check_session.php')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.logged_in || data.role !== 'staff') {
+                window.location.href = "login.html";
+            }
+        }).catch(err => console.log("Session skipped"));
+
+    function fetchDashboardCounts() {
+        fetch('get_dashboard_counts.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('count-customers').innerText = data.customers;
+                    document.getElementById('count-menus').innerText     = data.menus;
+                    document.getElementById('count-packages').innerText  = data.packages;
+                    document.getElementById('count-orders').innerText    = data.orders;
+                    document.getElementById('count-breakfast').innerText = data.breakfast;
+                    document.getElementById('count-lunch').innerText     = data.lunch;
+                    document.getElementById('count-drinks').innerText    = data.drinks;
+                    const menuOosContainer = document.getElementById('menu-oos-list');
+                    menuOosContainer.innerHTML = "";
+
+                    if (data.menus_out_of_stock && data.menus_out_of_stock.length > 0) {
+                        data.menus_out_of_stock.forEach(menu => {
+                            menuOosContainer.innerHTML += `
+                                <div class="menu-oos-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <span class="menu-name-red">${menu.name}</span>
+                                    <span style="font-size: 9px; font-weight: bold; color: #dc3545; border: 1px solid #dc3545; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; white-space: nowrap;">
+                                        OUT OF STOCK
+                                    </span>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        menuOosContainer.innerHTML = "<div class='text-muted small' style='font-style: italic; font-size: 12px; padding: 4px 0;'>All items in stock.</div>";
+                    }
+
+                    const packagesContainer = document.getElementById('packages-list');
+                    packagesContainer.innerHTML = ""; 
+
+                    if (data.packages_list && data.packages_list.length > 0) {
+                        data.packages_list.forEach(pkg => {
+                            let badgeColor = "green";
+                            let statusText = pkg.status ? pkg.status : "Available";
+
+                            if (pkg.status === "Out of Stock") {
+                                badgeColor = "red";
+                            }
+
+                            packagesContainer.innerHTML += `
+                                <div class="pkg-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <span class="pkg-name-orange">${pkg.name}</span>
+                                    <span style="font-size: 10px; font-weight: bold; color: ${badgeColor}; border: 1px solid ${badgeColor}; padding: 1px 5px; border-radius: 10px; text-transform: uppercase;">
+                                        ${statusText}
+                                    </span>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        packagesContainer.innerHTML = "<div class='text-muted small p-1'>No data package.</div>";
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching dashboard details:", error);
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchDashboardCounts);
+</script>
+
+</body>
+</html>
